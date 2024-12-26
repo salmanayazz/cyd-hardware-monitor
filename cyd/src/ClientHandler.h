@@ -5,41 +5,78 @@
 #include <vector>
 #include <HardwareData.h>
 
+#define SERVICE_UUID "12345678-1234-1234-1234-1234567890ab"
+#define CHARACTERISTIC_UUID "87654321-4321-4321-4321-0987654321ba"
+
 class ClientHandler : public BLECharacteristicCallbacks {
 public:
     ClientHandler() {
-		Serial.begin(115200);
-		BLEDevice::init("CYD_Server");
-		BLEServer *pServer = BLEDevice::createServer();
-		BLEService *pService = pServer->createService("12345678-1234-1234-1234-1234567890ab");
-		pCharacteristic = pService->createCharacteristic(
-			"87654321-4321-4321-4321-0987654321ba",
-			BLECharacteristic::PROPERTY_WRITE
-		);
+        Serial.begin(115200);
+        BLEDevice::init("CYD_Server");
 
-		pCharacteristic->setCallbacks(this);
-		pService->start();
+        pServer = BLEDevice::createServer();
+        pServer->setCallbacks(new ServerCallbacks(this));
 
-		BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-		pAdvertising->setScanResponse(true);
-		pAdvertising->addServiceUUID("12345678-1234-1234-1234-1234567890ab");
-		pAdvertising->start();
+        BLEService *pService = pServer->createService(SERVICE_UUID);
 
-		Serial.println("Server is running...");
-	}
+        pCharacteristic = pService->createCharacteristic(
+            CHARACTERISTIC_UUID,
+            BLECharacteristic::PROPERTY_WRITE | 
+			BLECharacteristic::PROPERTY_READ | 
+			BLECharacteristic::PROPERTY_NOTIFY
+        );
+
+        pCharacteristic->setCallbacks(this);
+        pService->start();
+
+        startAdvertising();
+        Serial.println("Server is running...");
+    }
     
-	void onWrite(BLECharacteristic *pCharacteristic) {
-		std::string receivedData = pCharacteristic->getValue();
-		Serial.print("Received: ");
-		Serial.println(receivedData.c_str());
-		hardwareData = receivedData.c_str();
-	}
+    void onWrite(BLECharacteristic *pCharacteristic) override {
+        std::string receivedData = pCharacteristic->getValue();
+        Serial.print("Received: ");
+        Serial.println(receivedData.c_str());
+        hardwareData = receivedData.c_str();
+    }
 
-	String getHardwareData() {
-		return hardwareData;
-	}
+    String getHardwareData() {
+        return hardwareData;
+    }
+
+    void startAdvertising() {
+        BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+        pAdvertising->setScanResponse(true);
+		pAdvertising->setMinPreferred(0x06);
+        pAdvertising->addServiceUUID(SERVICE_UUID);
+        pAdvertising->start();
+        Serial.println("Advertising started");
+    }
+
+    void restartAdvertising() {
+        Serial.println("Restarting advertising");
+        pServer->startAdvertising();
+    }
 
 private:
-	BLECharacteristic *pCharacteristic;
-	String hardwareData = "";
+    BLECharacteristic *pCharacteristic;
+    BLEServer *pServer;
+    String hardwareData = "";
+
+    class ServerCallbacks : public BLEServerCallbacks {
+    public:
+        ServerCallbacks(ClientHandler *handler) : handler(handler) {}
+
+        void onConnect(BLEServer *pServer) override {
+            Serial.println("Client connected");
+        }
+
+        void onDisconnect(BLEServer *pServer) override {
+            Serial.println("Client disconnected");
+            handler->restartAdvertising();
+        }
+
+    private:
+        ClientHandler *handler;
+    };
 };

@@ -1,5 +1,5 @@
 import asyncio
-from bleak import BleakClient
+from bleak import BleakClient, BleakScanner
 import psutil
 from pynvml import (
     nvmlInit, nvmlDeviceGetHandleByIndex, nvmlDeviceGetTemperature,
@@ -10,20 +10,17 @@ BLE_SERVICE_UUID = "12345678-1234-1234-1234-1234567890ab"
 BLE_CHARACTERISTIC_UUID = "87654321-4321-4321-4321-0987654321ba"
 BLE_ADDRESS = "A0:B7:65:05:68:AE"
 
-
 def get_cpu_temp():
-    try:
-        import wmi 
-        w = wmi.WMI(namespace="root\OpenHardwareMonitor")
-        sensors = w.Sensor()
-        for sensor in sensors:
-            if sensor.SensorType == 'Temperature' and 'CPU' in sensor.Name:
-                return sensor.Value
-    except Exception as e:
-        print(f"Failed to fetch CPU temperature: {e}")
+    # try:
+    #     import wmi 
+    #     w = wmi.WMI(namespace="root\OpenHardwareMonitor")
+    #     sensors = w.Sensor()
+    #     for sensor in sensors:
+    #         if sensor.SensorType == 'Temperature' and 'CPU' in sensor.Name:
+    #             return sensor.Value
+    # except Exception as e:
+    #     print(f"Failed to fetch CPU temperature: {e}")
     return None
-
-
 
 def get_cpu_util():
     return psutil.cpu_percent(interval=1)
@@ -50,22 +47,44 @@ def get_hardware_data():
         "memoryUtil": psutil.virtual_memory().percent
     }
 
-async def send_data(address):
-    print(f"Connecting to device: {address}")
-    async with BleakClient(address) as client:
-        print(f"Connected")
+async def send_data(client):
+    data = get_hardware_data()
+    res = f"{data['cpuUtil']},{data['cpuTemp']},{data['gpuUtil']},{data['gpuTemp']},{data['memoryUtil']}"
+    
+    await client.write_gatt_char(BLE_CHARACTERISTIC_UUID, res.encode('utf-8'))
+    print(f"Sent: {res.strip()}")
+
+async def connect(address):
+    client = BleakClient(
+        address,
+        use_cached_services=False,
+    )
+
+    while True:
+        print(f"Attempting to connect to {address}...")
         
-        while True:
+        try:
+            await client.connect()
+            print(f"Connected to {address}")
             
-            data = get_hardware_data()
-            res = f"{data['cpuUtil']},{data['cpuTemp']},{data['gpuUtil']},{data['gpuTemp']},{data['memoryUtil']}"
-            
-            await client.write_gatt_char(BLE_CHARACTERISTIC_UUID, res.encode('utf-8'))
-            print(f"Sent: {res.strip()}")
-            await asyncio.sleep(5)
+            while client.is_connected:
+                await send_data(client)
+                await asyncio.sleep(5)
+        
+        except asyncio.TimeoutError:
+            print("Connection timed out. Reinitializing BleakClient...")
+        
+        except Exception as e:
+            print(f"Failed to connect or send data: {e}")
+        
+        finally:
+            print("Disconnected. Retrying in 5 seconds...")
+
+        await client.disconnect()
+        await asyncio.sleep(5)
 
 async def main():
-    await send_data(BLE_ADDRESS)
+    await connect(BLE_ADDRESS)
 
 if __name__ == "__main__":
     asyncio.run(main())

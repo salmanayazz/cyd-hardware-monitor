@@ -5,21 +5,29 @@ from pynvml import (
     nvmlInit, nvmlDeviceGetHandleByIndex, nvmlDeviceGetTemperature,
     nvmlDeviceGetUtilizationRates, nvmlShutdown
 )
+import clr
+clr.AddReference(r'OpenHardwareMonitorLib')
+from OpenHardwareMonitor.Hardware import Computer
 
 BLE_SERVICE_UUID = "12345678-1234-1234-1234-1234567890ab"
 BLE_CHARACTERISTIC_UUID = "87654321-4321-4321-4321-0987654321ba"
 BLE_ADDRESS = "A0:B7:65:05:68:AE"
 
 def get_cpu_temp():
-    # try:
-    #     import wmi 
-    #     w = wmi.WMI(namespace="root\OpenHardwareMonitor")
-    #     sensors = w.Sensor()
-    #     for sensor in sensors:
-    #         if sensor.SensorType == 'Temperature' and 'CPU' in sensor.Name:
-    #             return sensor.Value
-    # except Exception as e:
-    #     print(f"Failed to fetch CPU temperature: {e}")
+    c = Computer()
+    c.CPUEnabled = True
+    c.Open()
+
+    for hardware in c.Hardware:
+        hardware.Update()
+        for sensor in hardware.Sensors:
+            if "temperature" in str(sensor.Identifier).lower():
+                try:
+                    temp = sensor.get_Value()
+                    return temp
+                except Exception as e:
+                    print(f"Error getting temperature: {e}")
+
     return None
 
 def get_cpu_util():
@@ -85,6 +93,7 @@ async def connect(address):
 
 async def main():
     await connect(BLE_ADDRESS)
+        
 
 if __name__ == "__main__":
     asyncio.run(main())

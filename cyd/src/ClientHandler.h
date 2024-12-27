@@ -3,7 +3,6 @@
 #include <BLEUtils.h>
 #include <BLEServer.h>
 #include <vector>
-#include <HardwareData.h>
 
 #define SERVICE_UUID "12345678-1234-1234-1234-1234567890ab"
 #define CHARACTERISTIC_UUID "87654321-4321-4321-4321-0987654321ba"
@@ -37,10 +36,34 @@ public:
         std::string receivedData = pCharacteristic->getValue();
         Serial.print("Received: ");
         Serial.println(receivedData.c_str());
-        hardwareData = receivedData.c_str();
+
+        // place the received data into string array
+        std::vector<std::string> data;
+        std::string temp = "";
+        for (char c : receivedData) {
+            if (c == ',') {
+                data.push_back(temp);
+                temp = "";
+            } else {
+                temp += c;
+            }
+        }
+        data.push_back(temp);
+
+        // convert string array to integer array
+        std::vector<int> intData;
+        for (std::string s : data) {
+            intData.push_back(std::stoi(s));
+        }
+
+        hardwareData.cpuUsage.push_back(intData[0]);
+        hardwareData.cpuTemp.push_back(intData[1]);
+        hardwareData.gpuUsage.push_back(intData[2]);
+        hardwareData.gpuTemp.push_back(intData[3]);
+        hardwareData.ramUsage.push_back(intData[4]);
     }
 
-    String getHardwareData() {
+    HardwareData getHardwareData() {
         return hardwareData;
     }
 
@@ -61,7 +84,7 @@ public:
 private:
     BLECharacteristic *pCharacteristic;
     BLEServer *pServer;
-    String hardwareData = "";
+    HardwareData hardwareData = HardwareData();
 
     class ServerCallbacks : public BLEServerCallbacks {
     public:

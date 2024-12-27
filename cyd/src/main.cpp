@@ -12,6 +12,6 @@ void setup() {
 void loop() {
     while (true) {
         display->print(clientHandler->getHardwareData());
-        delay(2000);
+        delay(1000);
     }
 }

@@ -65,14 +65,14 @@ async def send_data(client):
 async def connect(address):
     client = BleakClient(
         address,
-        use_cached_services=False,
+        use_cached_services=False
     )
 
     while True:
         print(f"Attempting to connect to {address}...")
         
         try:
-            await client.connect()
+            await asyncio.wait_for(client.connect(), timeout=10)
             print(f"Connected to {address}")
             
             while client.is_connected:

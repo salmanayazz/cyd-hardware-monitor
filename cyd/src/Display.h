@@ -6,8 +6,8 @@ class Display {
 public:
     Display() {
         tft.init();
-        tft.fillScreen(TFT_DARKGREY);
-        tft.setTextColor(TFT_BLACK, TFT_LIGHTGREY);
+        tft.fillScreen(TFT_BLACK);
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
         tft.setRotation(1);
         tft.setTextFont(1);
         tft.setTextSize(1);
@@ -41,7 +41,7 @@ private:
 
     void drawBorder(String label, int x, int y, int height = 30) {
         int width = tft.width() / 2 - 10;
-        tft.fillRoundRect(x + 5, y + 5, width, height, 5, TFT_LIGHTGREY);
+        tft.fillRoundRect(x + 5, y + 5, width, height, 5, 0x1082);
 
         tft.drawString(label, x + 10, y);
     }

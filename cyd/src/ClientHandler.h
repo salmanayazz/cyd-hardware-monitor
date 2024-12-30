@@ -3,6 +3,7 @@
 #include <BLEUtils.h>
 #include <BLEServer.h>
 #include <vector>
+#include <ArduinoJson.h>
 
 #define SERVICE_UUID "12345678-1234-1234-1234-1234567890ab"
 #define CHARACTERISTIC_UUID "87654321-4321-4321-4321-0987654321ba"
@@ -37,30 +38,20 @@ public:
         Serial.print("Received: ");
         Serial.println(receivedData.c_str());
 
-        // place the received data into string array
-        std::vector<std::string> data;
-        std::string temp = "";
-        for (char c : receivedData) {
-            if (c == ',') {
-                data.push_back(temp);
-                temp = "";
-            } else {
-                temp += c;
-            }
-        }
-        data.push_back(temp);
-
-        // convert string array to integer array
-        std::vector<int> intData;
-        for (std::string s : data) {
-            intData.push_back(std::stoi(s));
+        StaticJsonDocument<200> doc;
+        DeserializationError error = deserializeJson(doc, receivedData.c_str());
+        
+        if (error) {
+            Serial.print("Deserialization failed: ");
+            Serial.println(error.c_str());
+            return;
         }
 
-        hardwareData.cpuUsage.push_back(intData[0]);
-        hardwareData.cpuTemp.push_back(intData[1]);
-        hardwareData.gpuUsage.push_back(intData[2]);
-        hardwareData.gpuTemp.push_back(intData[3]);
-        hardwareData.ramUsage.push_back(intData[4]);
+        hardwareData.cpuUsage.push_back(doc["cpuUtil"]);
+        hardwareData.cpuTemp.push_back(doc["cpuTemp"]);
+        hardwareData.gpuUsage.push_back(doc["gpuUtil"]);
+        hardwareData.gpuTemp.push_back(doc["gpuTemp"]);
+        hardwareData.ramUsage.push_back(doc["memoryUtil"]);
     }
 
     HardwareData getHardwareData() {

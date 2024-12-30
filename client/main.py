@@ -8,6 +8,7 @@ from pynvml import (
 import clr
 clr.AddReference(r'OpenHardwareMonitorLib')
 from OpenHardwareMonitor.Hardware import Computer
+import json
 
 BLE_SERVICE_UUID = "12345678-1234-1234-1234-1234567890ab"
 BLE_CHARACTERISTIC_UUID = "87654321-4321-4321-4321-0987654321ba"
@@ -31,7 +32,7 @@ def get_cpu_temp():
     return None
 
 def get_cpu_util():
-    return psutil.cpu_percent(interval=1)
+    return round(psutil.cpu_percent(interval=0.1))
 
 def get_gpu_stats():
     gpu_temp, gpu_util = None, None
@@ -43,24 +44,29 @@ def get_gpu_stats():
     except Exception as e:
         print(f"Failed to fetch GPU stats: {e}")
     
-    return gpu_temp, gpu_util
+    return round(gpu_temp), round(gpu_util)
+
+def get_memory_util():
+    return round(psutil.virtual_memory().percent)
 
 def get_hardware_data():
     gpu_temp, gpu_util = get_gpu_stats()
+    
     return {
-        "cpuUtil": psutil.cpu_percent(),
+        "cpuUtil": get_cpu_util(),
         "cpuTemp": get_cpu_temp(),
         "gpuUtil": gpu_util,
         "gpuTemp": gpu_temp,
-        "memoryUtil": psutil.virtual_memory().percent
+        "memoryUtil": get_memory_util()
     }
 
 async def send_data(client):
     data = get_hardware_data()
-    res = f"{data['cpuUtil']},{data['cpuTemp']},{data['gpuUtil']},{data['gpuTemp']},{data['memoryUtil']}"
     
-    await client.write_gatt_char(BLE_CHARACTERISTIC_UUID, res.encode('utf-8'))
-    print(f"Sent: {res.strip()}")
+    json_data = json.dumps(data)
+    
+    await client.write_gatt_char(BLE_CHARACTERISTIC_UUID, json_data.encode('utf-8'))
+    print(f"Sent: {json_data}")
 
 async def connect(address):
     client = BleakClient(

@@ -6,6 +6,8 @@ public:
 	std::vector<int> cpuTemp = {};
 	std::vector<int> gpuUsage = {};
 	std::vector<int> gpuTemp = {};
-	std::vector<int> ramUsage = {};
+	std::vector<int> memoryUsage = {};
+	std::vector<int> fps = {};
+	String fpsProcess = "";
 };
   

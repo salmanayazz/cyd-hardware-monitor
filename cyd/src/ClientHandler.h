@@ -51,7 +51,9 @@ public:
         hardwareData.cpuTemp.push_back(doc["cpuTemp"]);
         hardwareData.gpuUsage.push_back(doc["gpuUtil"]);
         hardwareData.gpuTemp.push_back(doc["gpuTemp"]);
-        hardwareData.ramUsage.push_back(doc["memoryUtil"]);
+        hardwareData.memoryUsage.push_back(doc["memoryUtil"]);
+        hardwareData.fps.push_back(doc["fps"]);
+        hardwareData.fpsProcess = doc["fpsProcess"].as<String>();
     }
 
     HardwareData getHardwareData() {

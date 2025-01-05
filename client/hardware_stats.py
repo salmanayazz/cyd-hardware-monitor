@@ -92,22 +92,7 @@ def get_fps_stats():
     presentmon_proc.kill()
     presentmon_proc.wait()
 
-    return round(fps), processdef get_cpu_temp():
-    c = Computer()
-    c.CPUEnabled = True
-    c.Open()
-
-    for hardware in c.Hardware:
-        hardware.Update()
-        for sensor in hardware.Sensors:
-            if "temperature" in str(sensor.Identifier).lower():
-                try:
-                    temp = sensor.get_Value()
-                    return temp
-                except Exception as e:
-                    print(f"Error getting temperature: {e}")
-
-    return None
+    return round(fps), process
 
 def get_cpu_util():
     return round(psutil.cpu_percent(interval=0.1))

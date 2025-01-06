@@ -43,7 +43,34 @@ def get_cpu_temp():
     return None
 
 def get_cpu_util():
-    return round(psutil.cpu_percent(interval=0.1))
+    if 'Computer' in globals():
+        try: # windows
+            c = Computer()
+            c.CPUEnabled = True
+            c.Open()
+
+            sum = 0
+            count = 0
+            for hardware in c.Hardware:
+                hardware.Update()
+                print(hardware)
+                for sensor in hardware.Sensors:
+
+                    if "load" in str(sensor.Identifier).lower():
+                        sum += sensor.get_Value()
+                        count += 1
+
+            return round(sum / count)
+                        
+
+        except Exception as e:
+            print(f"Failed to fetch CPU utilization: {e}")
+
+    else:
+        try: # linux
+            return round(psutil.cpu_percent(interval=1))
+        except Exception as e:
+            print(f"Failed to fetch CPU utilization: {e}")
 
 def get_gpu_stats():
     gpu_temp, gpu_util = None, None

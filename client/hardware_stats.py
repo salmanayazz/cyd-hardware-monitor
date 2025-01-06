@@ -1,29 +1,44 @@
 import psutil
-from pynvml import (
-    nvmlInit, nvmlDeviceGetHandleByIndex, nvmlDeviceGetTemperature,
-    nvmlDeviceGetUtilizationRates, nvmlShutdown
-)
-import clr
-clr.AddReference(r'OpenHardwareMonitorLib')
-from OpenHardwareMonitor.Hardware import Computer
-import json
-import subprocess
-import csv
+
+try:
+    from pynvml import (
+        nvmlInit, nvmlDeviceGetHandleByIndex, nvmlDeviceGetTemperature,
+        nvmlDeviceGetUtilizationRates, nvmlShutdown
+    )
+    import clr
+    clr.AddReference(r'OpenHardwareMonitorLib')
+    from OpenHardwareMonitor.Hardware import Computer
+    import subprocess
+except ImportError as e:
+    print(f"Failed to import optional modules: {e}")
 
 def get_cpu_temp():
-    c = Computer()
-    c.CPUEnabled = True
-    c.Open()
+    if 'Computer' in globals():
+        try: # windows
+            c = Computer()
+            c.CPUEnabled = True
+            c.Open()
 
-    for hardware in c.Hardware:
-        hardware.Update()
-        for sensor in hardware.Sensors:
-            if "temperature" in str(sensor.Identifier).lower():
-                try:
-                    temp = sensor.get_Value()
-                    return temp
-                except Exception as e:
-                    print(f"Error getting temperature: {e}")
+            for hardware in c.Hardware:
+                hardware.Update()
+                for sensor in hardware.Sensors:
+                    if "temperature" in str(sensor.Identifier).lower():
+                        return round(sensor.get_Value())
+                        
+        except Exception as e: 
+            print(f"Failed to fetch CPU temp: {e}")
+    else:
+        try: # linux
+            total = 0
+            len = 0
+
+            for temp in psutil.sensors_temperatures().get('coretemp'):
+                total += temp.current
+                len += 1
+
+            return round(total / len)
+        except Exception as e:
+            print(f"Failed to fetch CPU temp: {e}")
 
     return None
 

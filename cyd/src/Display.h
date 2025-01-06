@@ -8,13 +8,8 @@ public:
     Display() {
         tft.init();
         tft.fillScreen(TFT_BLACK);
-        tft.setTextColor(TFT_WHITE);
         tft.setRotation(1);
-        tft.setTextFont(1);
-        tft.setTextSize(1);
-        tft.setTextDatum(TL_DATUM);
 
-        sprite.createSprite(tft.width(), tft.height());
         sprite.setTextColor(TFT_WHITE);
         sprite.setRotation(1);
         sprite.setTextFont(1);
@@ -22,24 +17,33 @@ public:
         sprite.setTextDatum(TL_DATUM);
     }
 
-    void print(HardwareData hardwareData) {
+    void print(HardwareData* hardwareDataList) {
         drawCard("CPU", 0, 0, 60);
-        drawBarGraph(hardwareData.cpuUsage, 0, 0, false, "%");
-        drawBarGraph(hardwareData.cpuTemp, 0, 30, true, "C");
+        drawBarGraph(hardwareDataList[0].cpuUsage, 0, 0, false, "%");
+        drawBarGraph(hardwareDataList[0].cpuTemp, 0, 30, true, "C");
         sprite.pushSprite(0, 0);
 
         drawCard("GPU", 0, 0, 60);
-        drawBarGraph(hardwareData.gpuUsage, 0, 0, false, "%");
-        drawBarGraph(hardwareData.gpuTemp, 0, 30, true, "C");
+        drawBarGraph(hardwareDataList[0].gpuUsage, 0, 0, false, "%");
+        drawBarGraph(hardwareDataList[0].gpuTemp, 0, 30, true, "C");
         sprite.pushSprite(tft.width() / 2, 0);
         
         drawCard("MEMORY", 0, 0);
-        drawBarGraph(hardwareData.memoryUsage, 0, 0, false, "%");
+        drawBarGraph(hardwareDataList[0].memoryUsage, 0, 0, false, "%");
         sprite.pushSprite(0, 70);
 
-        drawCard("FPS - " + hardwareData.fpsProcess, 0, 0);
-        drawBarGraph(hardwareData.fps, 0, 0, false, "", true);
+        drawCard("FPS - " + hardwareDataList[0].fpsProcess, 0, 0);
+        drawBarGraph(hardwareDataList[0].fps, 0, 0, false, "", true);
         sprite.pushSprite(tft.width() / 2, 70);
+
+        drawCard("CPU", 0, 0, 60);
+        drawBarGraph(hardwareDataList[1].cpuUsage, 0, 0, false, "%");
+        drawBarGraph(hardwareDataList[1].cpuTemp, 0, 30, true, "C");
+        sprite.pushSprite(0, 130);
+
+        drawCard("MEMORY", 0, 0);
+        drawBarGraph(hardwareDataList[1].memoryUsage, 0, 0, false, "%");
+        sprite.pushSprite(0, 200);
     }
 
 private:

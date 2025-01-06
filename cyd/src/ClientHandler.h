@@ -38,7 +38,7 @@ public:
         Serial.print("Received: ");
         Serial.println(receivedData.c_str());
 
-        StaticJsonDocument<200> doc;
+        StaticJsonDocument<300> doc;
         DeserializationError error = deserializeJson(doc, receivedData.c_str());
         
         if (error) {
@@ -47,23 +47,30 @@ public:
             return;
         }
 
-        hardwareData.cpuUsage.push_back(doc["cpuUtil"]);
-        hardwareData.cpuTemp.push_back(doc["cpuTemp"]);
-        hardwareData.gpuUsage.push_back(doc["gpuUtil"]);
-        hardwareData.gpuTemp.push_back(doc["gpuTemp"]);
-        hardwareData.memoryUsage.push_back(doc["memoryUtil"]);
-        hardwareData.fps.push_back(doc["fps"]);
-        hardwareData.fpsProcess = doc["fpsProcess"].as<String>();
+
+        if (doc["isPrimary"]) {
+            hardwareDataList[0].cpuUsage.push_back(doc["cpuUtil"]);
+            hardwareDataList[0].cpuTemp.push_back(doc["cpuTemp"]);
+            hardwareDataList[0].gpuUsage.push_back(doc["gpuUtil"]);
+            hardwareDataList[0].gpuTemp.push_back(doc["gpuTemp"]);
+            hardwareDataList[0].memoryUsage.push_back(doc["memoryUtil"]);
+            hardwareDataList[0].fps.push_back(doc["fps"]);
+            hardwareDataList[0].fpsProcess = doc["fpsProcess"].as<String>();
+        } else {
+            hardwareDataList[1].cpuUsage.push_back(doc["cpuUtil"]);
+            hardwareDataList[1].cpuTemp.push_back(doc["cpuTemp"]);
+            hardwareDataList[1].memoryUsage.push_back(doc["memoryUtil"]);
+        }
+        
     }
 
-    HardwareData getHardwareData() {
-        return hardwareData;
+    HardwareData* getHardwareDataList() {
+        return hardwareDataList;
     }
 
     void startAdvertising() {
         BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
         pAdvertising->setScanResponse(true);
-		pAdvertising->setMinPreferred(0x06);
         pAdvertising->addServiceUUID(SERVICE_UUID);
         pAdvertising->start();
         Serial.println("Advertising started");
@@ -77,7 +84,7 @@ public:
 private:
     BLECharacteristic *pCharacteristic;
     BLEServer *pServer;
-    HardwareData hardwareData = HardwareData();
+    HardwareData hardwareDataList[2] = {HardwareData(), HardwareData()};
 
     class ServerCallbacks : public BLEServerCallbacks {
     public:
@@ -85,6 +92,7 @@ private:
 
         void onConnect(BLEServer *pServer) override {
             Serial.println("Client connected");
+            handler->restartAdvertising();
         }
 
         void onDisconnect(BLEServer *pServer) override {

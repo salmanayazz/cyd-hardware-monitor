@@ -9,14 +9,14 @@ BLE_SERVICE_UUID = "12345678-1234-1234-1234-1234567890ab"
 BLE_CHARACTERISTIC_UUID = "87654321-4321-4321-4321-0987654321ba"
 
 async def connect(address, is_primary_device):
-    client = BleakClient(
-        address,
-        use_cached_services=False
-    )
-
     while True:
         print(f"Attempting to connect to {address}...")
-        
+
+        client = BleakClient(
+            address,
+            use_cached_services=False
+        )
+
         try:
             await asyncio.wait_for(client.connect(), timeout=10)
             print(f"Connected to {address}")
@@ -24,18 +24,20 @@ async def connect(address, is_primary_device):
             while client.is_connected:
                 await send_data(client, is_primary_device)
                 await asyncio.sleep(5)
-        
+
         except asyncio.TimeoutError:
             print("Connection timed out. Reinitializing BleakClient...")
-        
+
         except Exception as e:
             print(f"Failed to connect or send data: {e}")
-        
+
         finally:
+            if client.is_connected:
+                await client.disconnect()
             print("Disconnected. Retrying in 5 seconds...")
 
-        await client.disconnect()
         await asyncio.sleep(5)
+
 
 async def send_data(client, is_primary_device):
     data = await get_hardware_data(is_primary_device)

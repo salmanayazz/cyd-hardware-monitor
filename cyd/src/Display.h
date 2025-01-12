@@ -7,7 +7,7 @@ class Display {
 public:
     Display() {
         tft.init();
-        tft.fillScreen(TFT_BLACK);
+        tft.fillScreen(bgColor1);
         tft.setRotation(1);
 
         sprite.setTextColor(TFT_WHITE);
@@ -17,56 +17,36 @@ public:
         sprite.setTextDatum(TL_DATUM);
     }
 
-    void print(HardwareData* hardwareDataList) {
-        drawCard("CPU", 0, 0, 60);
-        drawBarGraph(hardwareDataList[0].cpuUsage, 0, 0, false, "%");
-        drawBarGraph(hardwareDataList[0].cpuTemp, 0, 30, true, "C");
-        sprite.pushSprite(0, 0);
-
-        drawCard("GPU", 0, 0, 60);
-        drawBarGraph(hardwareDataList[0].gpuUsage, 0, 0, false, "%");
-        drawBarGraph(hardwareDataList[0].gpuTemp, 0, 30, true, "C");
-        sprite.pushSprite(tft.width() / 2, 0);
-        
-        drawCard("MEMORY", 0, 0);
-        drawBarGraph(hardwareDataList[0].memoryUsage, 0, 0, false, "%");
-        sprite.pushSprite(0, 70);
-
-        drawCard("FPS - " + hardwareDataList[0].fpsProcess, 0, 0);
-        drawBarGraph(hardwareDataList[0].fps, 0, 0, false, "", true);
-        sprite.pushSprite(tft.width() / 2, 70);
-
-        drawCard("CPU", 0, 0, 60);
-        drawBarGraph(hardwareDataList[1].cpuUsage, 0, 0, false, "%");
-        drawBarGraph(hardwareDataList[1].cpuTemp, 0, 30, true, "C");
-        sprite.pushSprite(0, 130);
-
-        drawCard("MEMORY", 0, 0);
-        drawBarGraph(hardwareDataList[1].memoryUsage, 0, 0, false, "%");
-        sprite.pushSprite(0, 200);
+    void draw(HardwareData* hardwareDataList) {
+        drawDoubleBarGraph("CPU", hardwareDataList[0].cpuUsage, hardwareDataList[0].cpuTemp, "%", "C", 0, 0, false, false);
+        drawDoubleBarGraph("GPU", hardwareDataList[0].gpuUsage, hardwareDataList[0].gpuTemp, "%", "C", tft.width() / 2, 0, false, false);
+        drawBarGraph("MEMORY", hardwareDataList[0].memoryUsage, "%", 0, 70, false);
+        drawBarGraph("FPS - " + hardwareDataList[0].fpsProcess, hardwareDataList[0].fps, "", tft.width() / 2, 70, true);
+        drawDoubleBarGraph("CPU", hardwareDataList[1].cpuUsage, hardwareDataList[1].cpuTemp, "%", "C", 0, 130, false, false);
+        drawBarGraph("MEMORY", hardwareDataList[1].memoryUsage, "%", 0, 200, false);
     }
 
 private:
     TFT_eSPI tft = TFT_eSPI();
     TFT_eSprite sprite = TFT_eSprite(&tft);
-    int barWidth = 5;
-    int spacing = 1;
-    int graphWidth = tft.width() / 2 - 10;
-    int maxBars = graphWidth / (barWidth + spacing);
-    int graphHeight = 30;
+    int itemHeight = 30;
+    int itemWidth = max(tft.width(), tft.height()) / 2 - 10;
+    int bgColor1 = TFT_BLACK;
+    int bgColor2 = 0x1082;
 
-    void drawCard(String label, int x, int y, int height = 30) {
-        int width = tft.width() / 2 - 10;
-        sprite.createSprite(width + 5, height + 5);
-        sprite.fillSprite(TFT_BLACK);
+    void drawCard(String label, int itemHeight, int width) {
+        sprite.fillSprite(bgColor1);
 
-        sprite.fillRoundRect(5, 5, width, height, 5, 0x1082);
+        sprite.fillRoundRect(5, 5, width, itemHeight, 5, bgColor2);
         sprite.drawString(label, 10, 0);
     }
 
-    void drawBarGraph(const std::vector<int>& data, int x, int y, bool flipped, String unit, bool autoScale = false) {
-        int startX = x + maxBars * (barWidth + spacing) + 10;
-        int startY = y + 5;
+    void drawBars(std::vector<int>& data, bool flipped, String unit, bool autoScale = false) {
+        int barWidth = 5;
+        int spacing = 1;
+        int maxBars = (itemWidth - 40) / (barWidth + spacing);
+        int startX = maxBars * (barWidth + spacing) + 10;
+        int startY = (flipped ? itemHeight : 0) + 5;
         int barCount = min((int)data.size(), maxBars);
         int maxValue = 100;
 
@@ -78,18 +58,37 @@ private:
 
         for (int i = barCount - 1; i >= 0; i--) {
             int value = data[data.size() - 1 - i];
-            int barHeight = map(value, 0, maxValue, 0, graphHeight);
+            int barHeight = map(value, 0, maxValue, 0, itemHeight);
             
             if (flipped) {
                 sprite.fillRect(startX - i * (barWidth + spacing), startY, barWidth, barHeight, TFT_RED);
             } else {
-                sprite.fillRect(startX - i * (barWidth + spacing), startY + (graphHeight - barHeight), barWidth, barHeight, TFT_BLUE);
+                sprite.fillRect(startX - i * (barWidth + spacing), startY + (itemHeight - barHeight), barWidth, barHeight, TFT_BLUE);
             }
         }
 
         String value = data.size() > 0 ? String(data.back()) : "00";
         if (value.length() == 1) value = "0" + value;
 
-        sprite.drawString(value + unit, x + maxBars * (barWidth + spacing) + 20, y + 15);
+        sprite.drawString(value + unit, maxBars * (barWidth + spacing) + 20, startY + 10);
+    }
+
+    void drawBarGraph(String label, std::vector<int>& data, String unit, int x, int y, bool autoScale) {
+        sprite.createSprite(itemWidth + 5, itemHeight + 5);
+
+        drawCard(label, itemHeight, itemWidth);
+        drawBars(data, false, unit, autoScale);
+
+        sprite.pushSprite(x, y);
+    }
+
+    void drawDoubleBarGraph(String label, std::vector<int>& data1, std::vector<int>& data2, String unit1, String unit2, int x, int y, bool autoScale1, bool autoScale2) {
+        sprite.createSprite(itemWidth + 5, itemHeight * 2 + 5);
+
+        drawCard(label, itemHeight * 2, itemWidth);
+        drawBars(data1, false, unit1, autoScale1);
+        drawBars(data2, true, unit2, autoScale2);
+
+        sprite.pushSprite(x, y);
     }
 };

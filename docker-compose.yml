@@ -1,0 +1,10 @@
+services:
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: client
+    network_mode: "host"
+    privileged: true
+    volumes:
+      - /var/run/dbus/:/var/run/dbus/

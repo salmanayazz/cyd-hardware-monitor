@@ -40,12 +40,15 @@ async def connect(address, is_primary_device):
 
 
 async def send_data(client, is_primary_device):
-    data = await get_hardware_data(is_primary_device)
-    
-    json_data = json.dumps(data)
-    
-    await client.write_gatt_char(BLE_CHARACTERISTIC_UUID, json_data.encode('utf-8'))
-    print(f"Sent: {json_data}")
+    try: 
+        data = await get_hardware_data(is_primary_device)
+        
+        json_data = json.dumps(data)
+        
+        await client.write_gatt_char(BLE_CHARACTERISTIC_UUID, json_data.encode('utf-8'))
+        print(f"Sent: {json_data}")
+    except Exception as e:
+        print(f"Failed to send data: {e}")
 
 
 async def get_hardware_data(is_primary_device):

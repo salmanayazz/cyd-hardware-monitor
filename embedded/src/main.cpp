@@ -11,7 +11,7 @@ void setup() {
 
 void loop() {
     while (true) {
-        display->draw(clientHandler->getHardwareDataList());
+        display->draw(clientHandler->getClientDataList());
         delay(1000);
     }
 }

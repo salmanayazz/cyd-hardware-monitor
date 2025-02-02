@@ -49,23 +49,23 @@ public:
 
 
         if (doc["isPrimary"]) {
-            hardwareDataList[0].cpuUsage.push_back(doc["cpuUtil"]);
-            hardwareDataList[0].cpuTemp.push_back(doc["cpuTemp"]);
-            hardwareDataList[0].gpuUsage.push_back(doc["gpuUtil"]);
-            hardwareDataList[0].gpuTemp.push_back(doc["gpuTemp"]);
-            hardwareDataList[0].memoryUsage.push_back(doc["memoryUtil"]);
-            hardwareDataList[0].fps.push_back(doc["fps"]);
-            hardwareDataList[0].fpsProcess = doc["fpsProcess"].as<String>();
+            clientDataList[0].cpuUtil.push_back(doc["cpuUtil"]);
+            clientDataList[0].cpuTemp.push_back(doc["cpuTemp"]);
+            clientDataList[0].gpuUtil.push_back(doc["gpuUtil"]);
+            clientDataList[0].gpuTemp.push_back(doc["gpuTemp"]);
+            clientDataList[0].memoryUtil.push_back(doc["memoryUtil"]);
+            clientDataList[0].fps.push_back(doc["fps"]);
+            clientDataList[0].fps.setTitle("FPS - " + doc["fpsProcess"].as<String>());
         } else {
-            hardwareDataList[1].cpuUsage.push_back(doc["cpuUtil"]);
-            hardwareDataList[1].cpuTemp.push_back(doc["cpuTemp"]);
-            hardwareDataList[1].memoryUsage.push_back(doc["memoryUtil"]);
+            clientDataList[1].cpuUtil.push_back(doc["cpuUtil"]);
+            clientDataList[1].cpuTemp.push_back(doc["cpuTemp"]);
+            clientDataList[1].memoryUtil.push_back(doc["memoryUtil"]);
         }
         
     }
 
-    HardwareData* getHardwareDataList() {
-        return hardwareDataList;
+    ClientData* getClientDataList() {
+        return clientDataList;
     }
 
     void startAdvertising() {
@@ -84,7 +84,7 @@ public:
 private:
     BLECharacteristic *pCharacteristic;
     BLEServer *pServer;
-    HardwareData hardwareDataList[2] = {HardwareData(), HardwareData()};
+    ClientData clientDataList[2] = {ClientData(), ClientData()};
 
     class ServerCallbacks : public BLEServerCallbacks {
     public:

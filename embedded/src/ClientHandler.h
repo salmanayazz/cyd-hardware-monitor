@@ -12,7 +12,7 @@ class ClientHandler : public BLECharacteristicCallbacks {
 public:
     ClientHandler() {
         Serial.begin(115200);
-        BLEDevice::init("CYD_Server");
+        BLEDevice::init("Hardware_Monitor_Server");
 
         pServer = BLEDevice::createServer();
         pServer->setCallbacks(new ServerCallbacks(this));

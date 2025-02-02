@@ -1,0 +1,4 @@
+pynvml 
+pythonnet 
+bleak 
+psutil

@@ -1,9 +1,10 @@
+import time
 import psutil
 
 try:
     from pynvml import (
         nvmlInit, nvmlDeviceGetHandleByIndex, nvmlDeviceGetTemperature,
-        nvmlDeviceGetUtilizationRates, nvmlShutdown
+        nvmlDeviceGetUtilizationRates
     )
     import clr
     clr.AddReference(r'OpenHardwareMonitorLib')
@@ -53,9 +54,7 @@ def get_cpu_util():
             count = 0
             for hardware in c.Hardware:
                 hardware.Update()
-                print(hardware)
                 for sensor in hardware.Sensors:
-
                     if "load" in str(sensor.Identifier).lower():
                         sum += sensor.get_Value()
                         count += 1
@@ -202,3 +201,27 @@ def get_fps_stats():
     presentmon_proc.wait()
 
     return round(fps), process
+
+def get_drive_space():
+    return round(psutil.disk_usage('/').percent)
+
+def get_network_stats():
+    try:
+        initial = psutil.net_io_counters()
+        time.sleep(1)
+        final = psutil.net_io_counters()
+
+        return final.bytes_sent - initial.bytes_sent, final.bytes_recv - initial.bytes_recv
+    except Exception as e:
+        print(f"Failed to fetch network stats: {e}")
+
+def get_drive_stats():
+    try:
+        initial = psutil.disk_io_counters()
+        time.sleep(1)
+        final = psutil.disk_io_counters()
+
+
+        return final.read_bytes - initial.read_bytes, final.write_bytes - initial.write_bytes
+    except Exception as e:
+        print(f"Failed to fetch drive stats: {e}")

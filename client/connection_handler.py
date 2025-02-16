@@ -1,7 +1,6 @@
-import main
 import hardware_stats
 import asyncio
-from bleak import BleakClient, BleakScanner
+from bleak import BleakClient
 import json
 import asyncio
 
@@ -57,12 +56,13 @@ async def get_hardware_data(is_primary_device):
         
         fps, process = hardware_stats.get_fps_stats()
         
-        cpu_util, cpu_temp, gpu_stats, memory_util, fps_stats = await asyncio.gather(
+        cpu_util, cpu_temp, gpu_stats, memory_util, fps_stats, drive_space = await asyncio.gather(
             asyncio.to_thread(hardware_stats.get_cpu_util),
             asyncio.to_thread(hardware_stats.get_cpu_temp),
             asyncio.to_thread(hardware_stats.get_gpu_stats),
             asyncio.to_thread(hardware_stats.get_memory_util),
-            asyncio.to_thread(hardware_stats.get_fps_stats)   
+            asyncio.to_thread(hardware_stats.get_fps_stats),
+            asyncio.to_thread(hardware_stats.get_drive_space) 
         )
 
         gpu_temp, gpu_util = gpu_stats
@@ -76,18 +76,31 @@ async def get_hardware_data(is_primary_device):
             "gpuTemp": gpu_temp,
             "memoryUtil": memory_util,
             "fps": fps,
-            "fpsProcess": process
+            "fpsProcess": process,
+            "driveSpace": drive_space
         }
     else:
-        cpu_util, cpu_temp, memory_util = await asyncio.gather(
+        cpu_util, cpu_temp, memory_util, drive_space, drive_stats, network_stats = await asyncio.gather(
             asyncio.to_thread(hardware_stats.get_cpu_util),
             asyncio.to_thread(hardware_stats.get_cpu_temp),
-            asyncio.to_thread(hardware_stats.get_memory_util)
+            asyncio.to_thread(hardware_stats.get_memory_util),
+            asyncio.to_thread(hardware_stats.get_drive_space),
+            asyncio.to_thread(hardware_stats.get_drive_stats),
+            asyncio.to_thread(hardware_stats.get_network_stats)
         )
+
+        drive_read, drive_write = drive_stats
+        network_upload, network_download = network_stats
+
 
         return {
             "isPrimary": False,
             "cpuUtil": cpu_util,
             "cpuTemp": cpu_temp,
             "memoryUtil": memory_util,
+            "driveSpace": drive_space,
+            "driveRead": drive_read,
+            "driveWrite": drive_write,
+            "networkUpload": network_upload,
+            "networkDownload": network_download
         }

@@ -49,17 +49,23 @@ public:
 
 
         if (doc["isPrimary"]) {
-            clientDataList[0].cpuUtil.push_back(doc["cpuUtil"]);
-            clientDataList[0].cpuTemp.push_back(doc["cpuTemp"]);
-            clientDataList[0].gpuUtil.push_back(doc["gpuUtil"]);
-            clientDataList[0].gpuTemp.push_back(doc["gpuTemp"]);
-            clientDataList[0].memoryUtil.push_back(doc["memoryUtil"]);
-            clientDataList[0].fps.push_back(doc["fps"]);
-            clientDataList[0].fps.setTitle("FPS - " + doc["fpsProcess"].as<String>());
+            clientDataList[0].cpuUtil->push_back(doc["cpuUtil"]);
+            clientDataList[0].cpuTemp->push_back(doc["cpuTemp"]);
+            clientDataList[0].gpuUtil->push_back(doc["gpuUtil"]);
+            clientDataList[0].gpuTemp->push_back(doc["gpuTemp"]);
+            clientDataList[0].memoryUtil->push_back(doc["memoryUtil"]);
+            clientDataList[0].fps->push_back(doc["fps"]);
+            clientDataList[0].fps->setTitle("FPS - " + doc["fpsProcess"].as<String>());
+            clientDataList[0].driveSpace->push_back(doc["driveSpace"]);
         } else {
-            clientDataList[1].cpuUtil.push_back(doc["cpuUtil"]);
-            clientDataList[1].cpuTemp.push_back(doc["cpuTemp"]);
-            clientDataList[1].memoryUtil.push_back(doc["memoryUtil"]);
+            clientDataList[1].cpuUtil->push_back(doc["cpuUtil"]);
+            clientDataList[1].cpuTemp->push_back(doc["cpuTemp"]);
+            clientDataList[1].memoryUtil->push_back(doc["memoryUtil"]);
+            clientDataList[1].driveSpace->push_back(doc["driveSpace"]);
+            clientDataList[1].driveRead->push_back(doc["driveRead"]);
+            clientDataList[1].driveWrite->push_back(doc["driveWrite"]);
+            clientDataList[1].networkUpload->push_back(doc["networkUpload"]);
+            clientDataList[1].networkDownload->push_back(doc["networkDownload"]);
         }
         
     }

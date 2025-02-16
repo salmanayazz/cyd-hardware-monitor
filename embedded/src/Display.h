@@ -23,15 +23,20 @@ public:
 
     void draw(ClientData* clientDataList) {
         tft.drawString("PRIMARY", 10, 0);
-        drawDoubleBarGraph("CPU", clientDataList[0].cpuUtil, clientDataList[0].cpuTemp, 0, 10, itemWidth);
-        drawDoubleBarGraph("GPU", clientDataList[0].gpuUtil, clientDataList[0].gpuTemp, tft.width() / 2, 10, itemWidth);
+        drawDoubleBarGraph("CPU", *clientDataList[0].cpuUtil, *clientDataList[0].cpuTemp, 0, 10, itemWidth);
+        drawDoubleBarGraph("GPU", *clientDataList[0].gpuUtil, *clientDataList[0].gpuTemp, tft.width() / 2, 10, itemWidth);
 
-        drawBarGraph("MEMORY", clientDataList[0].memoryUtil, 0, itemHeight * 2 + 10, itemWidth);
-        drawBarGraph("FPS", clientDataList[0].fps, tft.width() / 2, itemHeight * 2 + 10, itemWidth);
+        drawBarGraph("MEMORY", *clientDataList[0].memoryUtil, 0, itemHeight * 2 + 10, itemWidth / 2);
+        drawBarGraph("DRIVE SPACE", *clientDataList[0].driveSpace, itemWidth / 2, itemHeight * 2 + 10, itemWidth / 2);
+        drawBarGraph("FPS - " + clientDataList[0].fpsProcess, *clientDataList[0].fps, tft.width() / 2, itemHeight * 2 + 10, itemWidth);
 
         tft.drawString("SECONDARY", 10, itemHeight * 3 + 20);
-        drawDoubleBarGraph("CPU", clientDataList[1].cpuUtil, clientDataList[1].cpuTemp, 0, itemHeight * 3 + 30, itemWidth);
-        drawBarGraph("MEMORY", clientDataList[1].memoryUtil, 0, itemHeight * 5 + 30, itemWidth);
+        drawDoubleBarGraph("CPU", *clientDataList[1].cpuUtil, *clientDataList[1].cpuTemp, 0, itemHeight * 3 + 30, itemWidth);
+        drawDoubleBarGraph("DRIVE", *clientDataList[1].driveRead, *clientDataList[1].driveWrite, tft.width() / 2, itemHeight * 3 + 30, itemWidth / 2);
+        drawDoubleBarGraph("NET", *clientDataList[1].networkUpload, *clientDataList[1].networkDownload, tft.width() / 2 + itemWidth / 2, itemHeight * 3 + 30, itemWidth / 2);
+
+        drawBarGraph("MEMORY", *clientDataList[1].memoryUtil, 0, itemHeight * 5 + 30, itemWidth / 2);
+        drawBarGraph("DRIVE SPACE", *clientDataList[1].driveSpace, itemWidth / 2, itemHeight * 5 + 30, itemWidth / 2);
     }
 
 private:
@@ -70,8 +75,8 @@ private:
         }
 
         String value = hardwareData.getFormattedValue(hardwareData.size() - 1);
-
-        sprite.drawString(value, maxBars * (barWidth + spacing) + 20, (flipped ? startY : 0) + 15);
+        int textCentre = 10 + (30 / value.length());
+        sprite.drawString(value, maxBars * (barWidth + spacing) + textCentre, (flipped ? startY : 0) + 15);
     }
 
     void drawBarGraph(String label, HardwareData& hardwareData, int x, int y, int width) {

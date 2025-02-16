@@ -1,5 +1,8 @@
 #include <vector>
 
+#ifndef HARDWAREDATA_H
+#define HARDWAREDATA_H
+
 class HardwareData {
 public:
     HardwareData(String title, String unit, int colour) {
@@ -59,3 +62,5 @@ protected:
     String unit = "";
     int colour = 0;
 };
+
+#endif
